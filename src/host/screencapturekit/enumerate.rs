@@ -23,9 +23,13 @@ impl Devices {
                     description: "Failed to get current shareable content".to_string(),
                 })
             };
-            tx.send(res).unwrap();
+            let _ = tx.send(res);
         });
-        let sc_shareable_content = rx.recv().unwrap()?;
+        let sc_shareable_content = rx.recv().map_err(|_| DevicesError::BackendSpecific {
+            err: BackendSpecificError {
+                description: "ScreenCaptureKit callback never fired (channel closed)".to_string(),
+            },
+        })??;
 
         let mut res = Vec::new();
         for display in sc_shareable_content.displays().iter() {
